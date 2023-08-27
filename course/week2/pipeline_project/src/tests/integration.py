@@ -42,8 +42,9 @@ class MNISTIntegrationTest(BaseTest):
 
   def get_dataloader(self, batch_size = 10):
     # returns a data loader
-    dataset = MNISTIntegrationDataset(self.paths, self.labels, 
-      transform = transforms.ToTensor())
+    dataset = MNISTIntegrationDataset(self.paths, 
+                                      self.labels, 
+                                      transform = transforms.ToTensor())
     loader = DataLoader(dataset, batch_size=batch_size)
     return loader
 
@@ -57,8 +58,12 @@ class MNISTIntegrationTest(BaseTest):
     # Pseudocode:
     # --
     # loader = ...
+    # batch_size = config.system.optimizer.batch_size
+    loader = self.get_dataloader()
+
     # pass loader to trainer and call test
-    #
+    trainer.test(system, dataloaders=loader)
+    
     # Notes:
     # --
     # Nothing to return here
