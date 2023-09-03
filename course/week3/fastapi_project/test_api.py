@@ -37,6 +37,6 @@ def test_predict(client):
     print('success!')
 
   except AssertionError:
-    print(response.status_code)
+    print(clear.status_code)
     print(response.json())
     raise

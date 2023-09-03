@@ -27,8 +27,8 @@ class InferenceInput(BaseModel):
   to us as a URL that we download.
   """
   image_url: str = Field(..., 
-    example = 'https://machinelearningmastery.com/wp-content/uploads/2019/02/sample_image.png', 
-    title = 'url to handwritten digit')
+                        example = 'https://machinelearningmastery.com/wp-content/uploads/2019/02/sample_image.png', 
+                        title = 'url to handwritten digit')
 
 
 class InferenceResult(BaseModel):
@@ -36,15 +36,16 @@ class InferenceResult(BaseModel):
   # Two expected return fields: a label (integer) and a probability 
   # vector - a list of 10 numbers that sum to one.
   label: int = Field(..., example = 0, title = 'Predicted label for image')
-  probs: List[float] = Field(..., example = [0.1] * 10, 
-    title='Predicted probability for predicted label')
+  probs: List[float] = Field(..., 
+                              example = [0.1] * 10, 
+                              title='Predicted probability for predicted label')
 
 
 class InferenceResponse(BaseModel):
   r"""Output response for model inference."""
   error: str = Field(..., example=False, title='error?')
   results: Dict[str, Any] = Field(..., example={}, 
-    title='label and probability results')
+                                  title='label and probability results')
 
 
 class ErrorResponse(BaseModel):
@@ -68,7 +69,7 @@ async def startup_event():
   system.eval()
   print('Loading successful.')
 
-  app.package = {'system': system}
+  app.package = {'system': system}   # save, time 19:54
 
 
 @app.post('/api/v1/predict',
@@ -93,7 +94,7 @@ def predict(request: Request, body: InferenceInput):
   # download locally: we assume that the image is already preprocessed.
   urllib.request.urlretrieve(body.image_url, local_path)
 
-  system = app.package['system']
+  system = app.package['system']        # load
   results: Dict[str, Any] = {'label': None, 'probs': None}
   
   im: Image = Image.open(local_path)
@@ -133,6 +134,7 @@ def predict(request: Request, body: InferenceInput):
     # Types:
     # --
     # logits: torch.Tensor (shape: 1x10)
+    logits = system.predict_step(im)
     # ================================
 
     # To extract the label, just find the largest logit.
@@ -154,6 +156,7 @@ def predict(request: Request, body: InferenceInput):
     # Types:
     # --
     # probs: torch.Tensor (shape: 1x10)
+    probs = F.softmax(logits, dim=-1)
     # ================================
     probs = probs.squeeze(0)        # squeeze to (10) shape
     probs = probs.numpy().tolist()  # convert tensor to list
