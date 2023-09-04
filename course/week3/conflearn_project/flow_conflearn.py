@@ -32,7 +32,7 @@ class TrainIdentifyReview(FlowSpec):
   ---------
   config (str, default: ./config.py): path to a configuration file
   """
-  config_path = Parameter('config', 
+  list = Parameter('config', 
     help = 'path to config file', default='./config.json')
 
   @step
@@ -108,6 +108,7 @@ class TrainIdentifyReview(FlowSpec):
 
     self.next(self.crossval)
   
+  # pylint: disable=E1101
   @step
   def crossval(self):
     r"""Confidence learning requires cross validation to compute 
@@ -167,6 +168,27 @@ class TrainIdentifyReview(FlowSpec):
       # Types:
       # --
       # probs_: np.array[float] (shape: |test set|)
+      X_train, X_test = X[train_index], X[test_index]
+      y_train, y_test = y[train_index], y[test_index]
+
+      X_train = torch.from_numpy(X_train)
+      X_test = torch.from_numpy(X_test)
+      y_train = torch.from_numpy(y_train)
+      y_test = torch.from_numpy(y_test)
+
+      ds_train = TensorDataset(X_train, y_train)
+      ds_test = TensorDataset(X_test, y_test)
+
+      dl_train = DataLoader(ds_train, batch_size=32, shuffle=True)
+      dl_test = DataLoader(ds_test, batch_size=32, shuffle=False)
+
+      system = SentimentClassifierSystem(self.config)
+
+      trainer = Trainer(max_epochs=10)
+      trainer.fit(system, dl_train)
+
+      probs = trainer.test(system, dataloaders=dl_test)
+      probs_ = torch.cat(probs).squeeze(1).numpy()
       # ===============================================
       assert probs_ is not None, "`probs_` is not defined."
       probs[test_index] = probs_
@@ -193,7 +215,9 @@ class TrainIdentifyReview(FlowSpec):
     likely have issues with the `cleanlab` tool. 
     """
     prob = np.asarray(self.all_df.prob)
-    prob = np.stack([1 - prob, prob]).T
+    # because it's a binary prediction task. We have 2 classes,
+    # so we can just actually do (1 - prob)
+    prob = np.stack([1 - prob, prob]).T        
   
     # rank label indices by issues
     ranked_label_issues = None
@@ -211,6 +235,9 @@ class TrainIdentifyReview(FlowSpec):
     # Types
     # --
     # ranked_label_issues: List[int]
+    ranked_label_issues = find_label_issues(np.asarray(self.all_df.label), 
+                                            prob, 
+                                            return_indices_ranked_by="self_confidence",)
     # =============================
     assert ranked_label_issues is not None, "`ranked_label_issues` not defined."
 
@@ -307,6 +334,9 @@ class TrainIdentifyReview(FlowSpec):
     # dm.train_dataset.data = training slice of self.all_df
     # dm.dev_dataset.data = dev slice of self.all_df
     # dm.test_dataset.data = test slice of self.all_df
+    dm.train_dataset.data = self.all_df[:train_size]
+    dm.dev_dataset.data = self.all_df[train_size:dev_size]
+    dm.test_dataset.data = self.all_df[dev_size:]
     # # ====================================
 
     # start from scratch
