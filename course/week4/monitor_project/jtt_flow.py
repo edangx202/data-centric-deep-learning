@@ -157,6 +157,7 @@ class JustTrainTwice(FlowSpec):
     # Type:
     # --
     # acc_diff: float (> 0 and < 1)
+    acc_diff = abs(en_results['acc'] - es_results['acc'])
     # =============================
 
     print(f'[lambd={lambd}] Results on English reviews:')
@@ -191,6 +192,7 @@ class JustTrainTwice(FlowSpec):
     # Notes:
     # -- 
     # Our solution is 2 lines of code.
+    index = min(range(len(inputs)), key=lambda i: inputs[i].acc_diff)
     # =============================
 
     en_results = inputs[index].en_results
