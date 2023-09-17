@@ -144,12 +144,13 @@ class MonitoringSystem:
     # it to a torch.Tensor.
     # 
     # `te_probs_cal`: torch.Tensor
-    ir = IsotonicRegression(out_of_bounds='clip')
+    cal_model = IsotonicRegression(out_of_bounds='clip')
 
-    tr_probs_cal = torch.Tensor(ir.fit_transform(
-                                  tr_probs.numpy(), tr_labels.numpy()))
-    te_probs_cal = torch.Tensor(ir.transform(
-                                  te_probs.numpy(), tr_labels.numpy()))
+    tr_probs_cal = cal_model.fit_transform(tr_probs.numpy(), tr_labels.numpy())
+    te_probs_cal = cal_model.transform(te_probs.numpy())
+    
+    tr_probs_cal = torch.from_numpy(tr_probs_cal).float()
+    te_probs_cal = torch.from_numpy(te_probs_cal).float()
     # ============================
     return tr_probs_cal, te_probs_cal
 
