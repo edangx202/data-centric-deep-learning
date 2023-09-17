@@ -86,7 +86,7 @@ class JustTrainTwice(FlowSpec):
     # weights: torch.FloatTensor (length: |ds|)
     print('0')
     predicted_label = torch.cat(self.trainer.predict(
-        self.system, dl), dim=0).round().int()
+                                                self.system, dl), dim=0).round().int()
     print(len(predicted_label))
     print('1')
     labels = torch.tensor([o['label'] for o in ds])
@@ -130,6 +130,7 @@ class JustTrainTwice(FlowSpec):
 
     en_ds = ProductReviewEmbeddings(lang='en', split='test')
     es_ds = ProductReviewEmbeddings(lang='es', split='test')
+
     en_dl = DataLoader(en_ds, 
       batch_size = config.system.optimizer.batch_size, 
       num_workers = config.system.optimizer.num_workers)
@@ -192,7 +193,18 @@ class JustTrainTwice(FlowSpec):
     # Notes:
     # -- 
     # Our solution is 2 lines of code.
-    index = min(range(len(inputs)), key=lambda i: inputs[i].acc_diff)
+
+
+
+    # chatgpt: 
+    # this is a way to find the index of the element with
+    # the smallest acc_diff value in a list of objects or dictionaries. 
+
+    # key=lambda i: inputs[i].acc_diff: 
+    #  This is a function that takes an index i and returns the acc_diff attribute of the element 
+    #  at that index in the inputs list. 
+    #  The min function uses this key function to compare the elements in the range.
+    index = min( range(len(inputs)), key=lambda i: inputs[i].acc_diff )
     # =============================
 
     en_results = inputs[index].en_results
