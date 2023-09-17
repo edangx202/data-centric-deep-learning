@@ -5,6 +5,7 @@ from os.path import join
 from torch.utils.data import Dataset
 from collections import defaultdict
 from src.paths import DATA_DIR
+from src.utils import tokenize
 
 
 class ProductReviewEmbeddings(Dataset):
@@ -50,6 +51,9 @@ class ProductReviewEmbeddings(Dataset):
     # Notes:
     # --
     # Convert tokens to lowercase when updating vocab.
+    for review in self.data.review:
+      for token in tokenize(review):
+          vocab[token] += 1
     # ===============================
     return dict(vocab)
 
@@ -109,6 +113,9 @@ class ProductReviewStream(Dataset):
     # Type:
     # --
     # vocab: dict[str, int]
+    for review in self.data.review:
+      for token in tokenize(review):
+          vocab[token] += 1
     # ===============================
     return dict(vocab)
 

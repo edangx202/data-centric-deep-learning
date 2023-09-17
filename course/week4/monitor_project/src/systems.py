@@ -199,6 +199,14 @@ class RobustSentimentSystem(SentimentClassifierSystem):
     # loss0: torch.Tensor (length = # of group 0 elements in batch)
     # loss1: torch.Tensor (length = # of group 1 elements in batch)
     # loss: torch.Tensor (single element)
+
+    # 1 if group is 0
+    mask0 = groups == 0
+    loss0 = loss[mask0].mean()
+    mask1 = groups == 1
+    loss1 = loss[mask1].mean()
+    
+    loss = torch.max(loss0, loss1)
     # =================================
 
     with torch.no_grad():

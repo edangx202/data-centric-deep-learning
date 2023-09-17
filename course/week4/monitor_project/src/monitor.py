@@ -25,6 +25,7 @@ def get_ks_score(tr_probs, te_probs):
   # te_probs: torch.Tensor
   #   predicted probabilities from test test
   # score: float - between 0 and 1
+  score, p_value = ks_2samp(tr_probs.numpy(), te_probs.numpy())
   # ============================
   return score
 
@@ -68,6 +69,17 @@ def get_hist_score(tr_probs, te_probs, bins=10):
   # Read the documentation for `np.histogram` carefully, in
   # particular what `bin_edges` represent.
   # ============================
+  tr_heights, bin_edges = np.histogram(
+                            tr_probs.numpy(), bins=10, density=True)
+  te_heights, _ = np.histogram(
+                            te_probs.numpy(), bins=bin_edges, density=True)
+
+  score = 0
+  for i in range(bins):
+      # width of this bin
+      bin_diff = bin_edges[i+1] - bin_edges[i]
+      intersect = bin_diff * min(tr_heights[i], te_heights[i])
+      score += intersect
   return score
 
 
@@ -96,6 +108,9 @@ def get_vocab_outlier(tr_vocab, te_vocab):
   #   Map from word to count for test examples
   # score: float (between 0 and 1)
   # ============================
+  tr_vocab_set = set(tr_vocab.keys())
+  te_vocab_set = set(te_vocab.keys())
+  score = len(tr_vocab_set & te_vocab_set) * 1.000 / len(tr_vocab_set)
   return score
 
 
@@ -129,6 +144,12 @@ class MonitoringSystem:
     # it to a torch.Tensor.
     # 
     # `te_probs_cal`: torch.Tensor
+    ir = IsotonicRegression(out_of_bounds='clip')
+
+    tr_probs_cal = torch.Tensor(ir.fit_transform(
+                                  tr_probs.numpy(), tr_labels.numpy()))
+    te_probs_cal = torch.Tensor(ir.transform(
+                                  te_probs.numpy(), tr_labels.numpy()))
     # ============================
     return tr_probs_cal, te_probs_cal
 

@@ -84,6 +84,17 @@ class JustTrainTwice(FlowSpec):
     # Type:
     # --
     # weights: torch.FloatTensor (length: |ds|)
+    print('0')
+    predicted_label = torch.cat(self.trainer.predict(
+        self.system, dl), dim=0).round().int()
+    print(len(predicted_label))
+    print('1')
+    labels = torch.tensor([o['label'] for o in ds])
+    print('2')
+    weights = (predicted_label != labels).float()
+    print(
+        f"Total predictions: {len(predicted_label)}, wrong predictions: {sum(weights.tolist())}")
+    assert len(weights) == len(ds)
     # =============================
     self.weights = weights
     
