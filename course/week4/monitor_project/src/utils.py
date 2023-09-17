@@ -17,3 +17,9 @@ def from_json(filepath):
 
 def load_config(config_path):
   return DotMap(from_json(config_path))
+
+
+def tokenize(text: str):
+    # Remove non-alphanumeric characters and split into words
+    words = re.findall(r'\w+', text.lower())
+    return words
